@@ -25,16 +25,10 @@ import LoadingGlobe from "@/components/ui/loading-globe"
 import ErrorDisplay from "@/components/ui/error-display"
 import type { AnimalMovement, Species } from "@/types/migration"
 import { processMovementPaths, interpolatePath } from "@/utils/geospatial"
-import "leaflet/dist/leaflet.css"
 
-// Fix for default markers in React-Leaflet
-import L from "leaflet"
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-})
+// Only import Leaflet CSS and fix markers on client side
+let L: any = null
+let leafletCSSLoaded = false
 
 // Free map providers
 const MAP_PROVIDERS = {
@@ -343,155 +337,125 @@ export default function RealMigrationMap({
   error,
   onRetry,
 }: RealMigrationMapProps) {
-  const mapRef = useRef<L.Map>(null)
+  const [isClient, setIsClient] = useState(false)
+  const [isMapReady, setIsMapReady] = useState(false)
+  const [mapError, setMapError] = useState<string | null>(null)
   const [showLegend, setShowLegend] = useState(true)
+  const [mapType, setMapType] = useState("openstreetmap")
   const [showPaths, setShowPaths] = useState(true)
-  const [mapType, setMapType] = useState<keyof typeof MAP_PROVIDERS>("openstreetmap")
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null)
+  const mapRef = useRef<any>(null)
 
-  // Enhanced zoom controls
-  const handleZoomIn = useCallback(() => {
-    mapRef.current?.zoomIn()
+  // Ensure we're on client side and initialize Leaflet
+  useEffect(() => {
+    const initClient = async () => {
+      try {
+        // Load Leaflet CSS only once
+        if (!leafletCSSLoaded) {
+          await import("leaflet/dist/leaflet.css")
+          leafletCSSLoaded = true
+        }
+
+        // Import Leaflet
+        L = await import("leaflet")
+        
+        // Fix for default markers in React-Leaflet
+        delete (L.Icon.Default.prototype as any)._getIconUrl
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        })
+
+        setIsClient(true)
+      } catch (err) {
+        console.error('Failed to initialize Leaflet:', err)
+        setMapError('Failed to load map. Please refresh the page.')
+      }
+    }
+
+    initClient()
   }, [])
 
-  const handleZoomOut = useCallback(() => {
-    mapRef.current?.zoomOut()
-  }, [])
+  // Don't render anything until client-side
+  if (!isClient) {
+    return <LoadingGlobe message="Initializing map..." />
+  }
 
-  const handleReset = useCallback(() => {
-    mapRef.current?.setView([20, 0], 2)
-  }, [])
-
-  if (error) {
+  if (mapError) {
     return (
-      <ErrorDisplay 
-        error={error} 
-        title="Failed to load migration data"
-        onRetry={onRetry}
-      />
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
+        <div className="text-center space-y-4 p-6">
+          <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+            <Globe className="w-8 h-8 text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-red-800">Map Unavailable</h3>
+            <p className="text-red-600 text-sm mb-4">{mapError}</p>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="text-sm"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
     )
   }
 
   if (loading) {
-    return <LoadingGlobe message="Loading real-time map..." />
+    return <LoadingGlobe message="Loading map..." />
   }
 
-  if (selectedSpecies.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-lg relative overflow-hidden">
-        {/* Animated background particles */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-blue-400 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: i * 0.1,
-              }}
-            />
-          ))}
-        </div>
-        
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          className="text-center relative z-10"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl"
-          >
-            <Globe className="h-10 w-10 text-white" />
-          </motion.div>
-          <h3 className="text-xl font-bold text-white mb-3">Select Species to Begin</h3>
-          <p className="text-blue-200">Choose wildlife species to visualize stunning migration patterns</p>
-        </motion.div>
-      </div>
-    )
+  if (error) {
+    return <ErrorDisplay error={error} onRetry={onRetry} />
   }
 
-  const currentProvider = MAP_PROVIDERS[mapType]
+  const selectedProvider = MAP_PROVIDERS[mapType as keyof typeof MAP_PROVIDERS]
 
   return (
-    <div className="h-full w-full relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-lg overflow-hidden">
-      {/* Enhanced animated background */}
-      <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-0.5 h-0.5 bg-blue-400/30 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: i * 0.2,
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Real Map */}
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="h-full w-full relative z-10"
-        >
-          <MapContainer
-            center={[20, 0]}
-            zoom={2}
-            className="h-full w-full"
-            ref={mapRef}
-            zoomControl={false}
-            attributionControl={false}
-          >
-            {/* Map Type Tiles */}
-            <TileLayer
-              url={currentProvider.url}
-              attribution={currentProvider.attribution}
-            />
+    <motion.div
+      className="relative h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Map Container */}
+      <MapContainer
+        center={[20, 0]}
+        zoom={zoomLevel}
+        className="h-full w-full"
+        ref={mapRef}
+        zoomControl={false}
+        attributionControl={false}
+        onLoad={() => setIsMapReady(true)}
+      >
+        <TileLayer
+          url={selectedProvider.url}
+          attribution={selectedProvider.attribution}
+        />
+        
+        <MapEventHandler onZoomChange={onZoomChange} />
+        
+        <MigrationPaths
+          movements={movements}
+          selectedSpecies={selectedSpecies}
+          currentTime={currentTime}
+          timeRange={timeRange}
+          isPlaying={isPlaying}
+          showPaths={showPaths}
+        />
+      </MapContainer>
 
-            {/* Migration Paths */}
-            <MigrationPaths
-              movements={movements}
-              selectedSpecies={selectedSpecies}
-              currentTime={currentTime}
-              timeRange={timeRange}
-              isPlaying={isPlaying}
-              showPaths={showPaths}
-            />
-
-            {/* Map Event Handler */}
-            <MapEventHandler onZoomChange={onZoomChange} />
-          </MapContainer>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Enhanced Control Panel */}
+      {/* Controls */}
       <MapControls
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onReset={handleReset}
+        onZoomIn={() => mapRef.current?.zoomIn()}
+        onZoomOut={() => mapRef.current?.zoomOut()}
+        onReset={() => {
+          mapRef.current?.setView([20, 0], 2)
+          onZoomChange(2)
+        }}
         showLegend={showLegend}
         setShowLegend={setShowLegend}
         mapType={mapType}
@@ -500,33 +464,28 @@ export default function RealMigrationMap({
         setShowPaths={setShowPaths}
       />
 
-      {/* Enhanced Legend */}
+      {/* Legend */}
       <AnimatePresence>
         {showLegend && selectedSpecies.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, x: 300 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 300 }}
-            className="absolute bottom-4 left-4 z-[1000] bg-black/50 backdrop-blur-md rounded-lg p-4 space-y-3 shadow-lg"
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute bottom-4 left-4 z-[1000] bg-black/80 backdrop-blur-md rounded-lg p-4 shadow-xl border border-white/20"
           >
-            <div className="flex items-center gap-2 text-white">
-              <Info className="w-4 h-4" />
-              <span className="text-sm font-semibold">Active Species</span>
-            </div>
+            <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Species Legend
+            </h3>
             <div className="space-y-2">
               {selectedSpecies.map((species) => (
-                <motion.div
-                  key={species.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3"
-                >
+                <div key={species.id} className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 rounded-full animate-pulse"
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: species.color }}
                   />
-                  <span className="text-sm text-white">{species.icon} {species.name}</span>
-                </motion.div>
+                  <span className="text-white text-xs">{species.name}</span>
+                </div>
               ))}
             </div>
           </motion.div>
@@ -537,7 +496,7 @@ export default function RealMigrationMap({
       <div className="absolute bottom-4 right-4 z-[1000]">
         <Badge
           variant="secondary"
-          className="bg-black/50 backdrop-blur-md text-white border-white/20 shadow-lg"
+          className="bg-black/80 text-white border-white/20 backdrop-blur-md"
         >
           <div className="flex items-center gap-2">
             {isPlaying ? (
@@ -552,67 +511,11 @@ export default function RealMigrationMap({
         </Badge>
       </div>
 
-      {/* Map Type Indicator */}
-      <div className="absolute top-4 left-4 z-[1000]">
-        <Badge
-          variant="secondary"
-          className="bg-black/50 backdrop-blur-md text-white border-white/20 shadow-lg"
-        >
-          <div className="flex items-center gap-2">
-            {(() => {
-              const IconComponent = currentProvider.icon
-              return <IconComponent className="w-3 h-3" />
-            })()}
-            <span className="text-xs">
-              {currentProvider.name}
-            </span>
-          </div>
-        </Badge>
+      {/* Map Info - Moved to bottom */}
+      <div className="absolute bottom-4 left-4 z-[1000] text-white/70 text-xs max-w-48 bg-black/50 backdrop-blur-md rounded-lg p-2">
+        <p>🖱️ Drag to pan • 🔍 Scroll to zoom • 📱 Pinch to zoom</p>
+        <p className="text-white/50 mt-1">Real-time Migration Tracking</p>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style jsx global>{`
-        .leaflet-container {
-          background: transparent !important;
-        }
-        
-        .leaflet-control-attribution {
-          display: none !important;
-        }
-        
-        .migration-path {
-          filter: drop-shadow(0 0 8px currentColor);
-        }
-        
-        .pulse-ring {
-          animation: pulse-ring 2s ease-in-out infinite;
-        }
-        
-        .custom-marker {
-          background: transparent !important;
-          border: none !important;
-        }
-        
-        @keyframes pulse-ring {
-          0% { 
-            transform: scale(0.8); 
-            opacity: 0.3; 
-          }
-          50% { 
-            transform: scale(1.2); 
-            opacity: 0.1; 
-          }
-          100% { 
-            transform: scale(0.8); 
-            opacity: 0.3; 
-          }
-        }
-        
-        @keyframes bounce {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
-      `}</style>
-    </div>
+    </motion.div>
   )
 } 
