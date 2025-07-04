@@ -16,7 +16,10 @@ import {
   Pause,
   MapPin,
   Satellite,
-  Navigation
+  Navigation,
+  Map,
+  Eye,
+  EyeOff
 } from "lucide-react"
 import LoadingGlobe from "@/components/ui/loading-globe"
 import ErrorDisplay from "@/components/ui/error-display"
@@ -33,6 +36,40 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 })
 
+// Free map providers
+const MAP_PROVIDERS = {
+  openstreetmap: {
+    name: "OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    icon: Navigation
+  },
+  satellite: {
+    name: "Satellite",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+    icon: Satellite
+  },
+  terrain: {
+    name: "Terrain",
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://opentopomap.org/">OpenTopoMap</a> contributors',
+    icon: Map
+  },
+  dark: {
+    name: "Dark",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    icon: Eye
+  },
+  light: {
+    name: "Light",
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    icon: EyeOff
+  }
+}
+
 interface RealMigrationMapProps {
   movements: AnimalMovement[]
   selectedSpecies: Species[]
@@ -46,7 +83,7 @@ interface RealMigrationMapProps {
   onRetry?: () => void
 }
 
-// Map Controls Component
+// Enhanced Map Controls Component
 function MapControls({ 
   onZoomIn, 
   onZoomOut, 
@@ -54,7 +91,9 @@ function MapControls({
   showLegend, 
   setShowLegend,
   mapType,
-  setMapType 
+  setMapType,
+  showPaths,
+  setShowPaths
 }: {
   onZoomIn: () => void
   onZoomOut: () => void
@@ -63,7 +102,11 @@ function MapControls({
   setShowLegend: (show: boolean) => void
   mapType: string
   setMapType: (type: string) => void
+  showPaths: boolean
+  setShowPaths: (show: boolean) => void
 }) {
+  const [showMapMenu, setShowMapMenu] = useState(false)
+
   return (
     <div className="absolute top-4 right-4 z-[1000] space-y-2">
       {/* Zoom Controls */}
@@ -73,6 +116,7 @@ function MapControls({
           size="sm"
           onClick={onZoomIn}
           className="w-8 h-8 p-0 text-white hover:bg-white/20"
+          title="Zoom In"
         >
           <ZoomIn className="w-4 h-4" />
         </Button>
@@ -81,6 +125,7 @@ function MapControls({
           size="sm"
           onClick={onZoomOut}
           className="w-8 h-8 p-0 text-white hover:bg-white/20"
+          title="Zoom Out"
         >
           <ZoomOut className="w-4 h-4" />
         </Button>
@@ -89,29 +134,76 @@ function MapControls({
           size="sm"
           onClick={onReset}
           className="w-8 h-8 p-0 text-white hover:bg-white/20"
+          title="Reset View"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Map Type Toggle */}
-      <div className="bg-black/50 backdrop-blur-md rounded-lg p-2 space-y-1 shadow-lg">
+      {/* Map Type Menu */}
+      <div className="relative">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setMapType(mapType === "streets" ? "satellite" : "streets")}
-          className="w-8 h-8 p-0 text-white hover:bg-white/20"
-          title={mapType === "streets" ? "Switch to Satellite" : "Switch to Streets"}
+          onClick={() => setShowMapMenu(!showMapMenu)}
+          className="w-8 h-8 p-0 text-white hover:bg-white/20 bg-black/50 backdrop-blur-md shadow-lg"
+          title="Map Type"
         >
-          {mapType === "streets" ? <Satellite className="w-4 h-4" /> : <Navigation className="w-4 h-4" />}
+          <Layers className="w-4 h-4" />
         </Button>
+        
+        <AnimatePresence>
+          {showMapMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-full right-0 mt-2 bg-black/80 backdrop-blur-md rounded-lg p-2 space-y-1 shadow-xl border border-white/20"
+            >
+              {Object.entries(MAP_PROVIDERS).map(([key, provider]) => {
+                const IconComponent = provider.icon
+                return (
+                  <Button
+                    key={key}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setMapType(key)
+                      setShowMapMenu(false)
+                    }}
+                    className={`w-full justify-start text-white hover:bg-white/20 ${
+                      mapType === key ? 'bg-white/20' : ''
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4 mr-2" />
+                    <span className="text-xs">{provider.name}</span>
+                  </Button>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Toggle Controls */}
+      <div className="bg-black/50 backdrop-blur-md rounded-lg p-2 space-y-1 shadow-lg">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowLegend(!showLegend)}
           className="w-8 h-8 p-0 text-white hover:bg-white/20"
+          title="Toggle Legend"
         >
-          <Layers className="w-4 h-4" />
+          <Info className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowPaths(!showPaths)}
+          className="w-8 h-8 p-0 text-white hover:bg-white/20"
+          title="Toggle Paths"
+        >
+          <MapPin className="w-4 h-4" />
         </Button>
       </div>
     </div>
@@ -136,21 +228,25 @@ function MapEventHandler({ onZoomChange }: { onZoomChange: (zoom: number) => voi
   return null
 }
 
-// Migration Paths Component
+// Enhanced Migration Paths Component
 function MigrationPaths({ 
   movements, 
   selectedSpecies, 
   currentTime, 
   timeRange, 
-  isPlaying 
+  isPlaying,
+  showPaths
 }: {
   movements: AnimalMovement[]
   selectedSpecies: Species[]
   currentTime: number
   timeRange: { start: number; end: number }
   isPlaying: boolean
+  showPaths: boolean
 }) {
   const processedPaths = processMovementPaths(movements, timeRange)
+
+  if (!showPaths) return null
 
   return (
     <>
@@ -200,49 +296,32 @@ function MigrationPaths({
                       color: species.color,
                       fillColor: species.color,
                       fillOpacity: 0.1,
-                      weight: 2,
-                      opacity: 0.3,
+                      weight: 1,
                     }}
                     className="pulse-ring"
                   />
                 ))}
-
-                {/* Main position marker */}
-                <Marker
-                  position={[currentPosition[1], currentPosition[0]]}
-                  icon={L.divIcon({
-                    className: 'custom-marker',
-                    html: `
-                      <div style="
-                        background: ${species.color};
-                        border: 3px solid white;
-                        border-radius: 50%;
-                        width: 20px;
-                        height: 20px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        box-shadow: 0 0 10px ${species.color};
-                        animation: bounce 1s ease-in-out infinite;
-                      ">
-                        <span style="font-size: 12px; color: white;">${species.icon}</span>
-                      </div>
-                    `,
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10],
-                  })}
+                
+                {/* Current position marker */}
+                <Circle
+                  center={[currentPosition[1], currentPosition[0]]}
+                  radius={2000}
+                  pathOptions={{
+                    color: species.color,
+                    fillColor: species.color,
+                    fillOpacity: 0.8,
+                    weight: 2,
+                  }}
+                  className="custom-marker"
                 >
                   <Popup>
                     <div className="text-center">
-                      <div className="text-2xl mb-2">{species.icon}</div>
-                      <div className="font-semibold text-gray-800">{species.name}</div>
-                      <div className="text-sm text-gray-600">Current Position</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentPosition[1].toFixed(2)}°N, {currentPosition[0].toFixed(2)}°E
-                      </div>
+                      <div className="text-xl mb-1">{species.icon}</div>
+                      <div className="font-medium text-gray-800">{species.name}</div>
+                      <div className="text-xs text-gray-600">Current Position</div>
                     </div>
                   </Popup>
-                </Marker>
+                </Circle>
               </div>
             )}
           </div>
@@ -266,7 +345,8 @@ export default function RealMigrationMap({
 }: RealMigrationMapProps) {
   const mapRef = useRef<L.Map>(null)
   const [showLegend, setShowLegend] = useState(true)
-  const [mapType, setMapType] = useState<"streets" | "satellite">("streets")
+  const [showPaths, setShowPaths] = useState(true)
+  const [mapType, setMapType] = useState<keyof typeof MAP_PROVIDERS>("openstreetmap")
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null)
 
   // Enhanced zoom controls
@@ -342,6 +422,8 @@ export default function RealMigrationMap({
     )
   }
 
+  const currentProvider = MAP_PROVIDERS[mapType]
+
   return (
     <div className="h-full w-full relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-lg overflow-hidden">
       {/* Enhanced animated background */}
@@ -384,17 +466,10 @@ export default function RealMigrationMap({
             attributionControl={false}
           >
             {/* Map Type Tiles */}
-            {mapType === "streets" ? (
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-            ) : (
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-              />
-            )}
+            <TileLayer
+              url={currentProvider.url}
+              attribution={currentProvider.attribution}
+            />
 
             {/* Migration Paths */}
             <MigrationPaths
@@ -403,6 +478,7 @@ export default function RealMigrationMap({
               currentTime={currentTime}
               timeRange={timeRange}
               isPlaying={isPlaying}
+              showPaths={showPaths}
             />
 
             {/* Map Event Handler */}
@@ -420,6 +496,8 @@ export default function RealMigrationMap({
         setShowLegend={setShowLegend}
         mapType={mapType}
         setMapType={setMapType}
+        showPaths={showPaths}
+        setShowPaths={setShowPaths}
       />
 
       {/* Enhanced Legend */}
@@ -481,13 +559,12 @@ export default function RealMigrationMap({
           className="bg-black/50 backdrop-blur-md text-white border-white/20 shadow-lg"
         >
           <div className="flex items-center gap-2">
-            {mapType === "streets" ? (
-              <Navigation className="w-3 h-3" />
-            ) : (
-              <Satellite className="w-3 h-3" />
-            )}
+            {(() => {
+              const IconComponent = currentProvider.icon
+              return <IconComponent className="w-3 h-3" />
+            })()}
             <span className="text-xs">
-              {mapType === "streets" ? "Streets" : "Satellite"}
+              {currentProvider.name}
             </span>
           </div>
         </Badge>

@@ -50,11 +50,11 @@ Prioritized improvements following development commandments: **No Overengineerin
 ### Phase 1 (Day 3-6)
 - [x] Enhanced timeline controls
 - [x] Improved species selector
-- [x] Enhanced data stats display
-- [x] Mobile responsiveness
+- [ ] Enhanced data stats display
+- [ ] Mobile responsiveness
 
 ### Phase 2 (Day 7-13)
-- [x] Enhanced 2D map styling
+- [ ] Enhanced 2D map styling
 - [ ] Improved 3D globe effects
 - [ ] Analytics dashboard improvements
 

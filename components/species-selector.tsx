@@ -99,13 +99,13 @@ export default function SpeciesSelector({ selectedSpecies, onSpeciesChange, load
           <Button variant="outline" size="sm" onClick={handleSelectAll} disabled={loading} className="text-xs h-6 md:h-7 px-1.5 md:px-2">
             <span className="hidden sm:inline">Select All</span>
             <span className="sm:hidden">All</span>
-          </Button>
+        </Button>
           <Button variant="outline" size="sm" onClick={handleClearAll} disabled={loading || selectedSpecies.length === 0} className="text-xs h-6 md:h-7 px-1.5 md:px-2">
             <span className="hidden sm:inline">Clear All</span>
             <span className="sm:hidden">Clear</span>
-          </Button>
-        </div>
-        
+        </Button>
+      </div>
+
         {/* Search Input */}
         <div className="relative">
           <input
@@ -153,11 +153,11 @@ export default function SpeciesSelector({ selectedSpecies, onSpeciesChange, load
                 <div className="flex items-start p-2 md:p-3">
                   {/* Enhanced Checkbox */}
                   <div className="relative mt-0.5">
-                    <Checkbox
-                      id={species.id}
-                      checked={isSelected}
-                      onCheckedChange={(checked) => handleSpeciesToggle(species, checked as boolean)}
-                      disabled={loading}
+                <Checkbox
+                  id={species.id}
+                  checked={isSelected}
+                  onCheckedChange={(checked) => handleSpeciesToggle(species, checked as boolean)}
+                  disabled={loading}
                       className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                     />
                     {loading && isSelected && (
@@ -202,7 +202,7 @@ export default function SpeciesSelector({ selectedSpecies, onSpeciesChange, load
                       >
                         <span className="hidden sm:inline">{species.type.charAt(0).toUpperCase() + species.type.slice(1)}</span>
                         <span className="sm:hidden">{species.type.charAt(0).toUpperCase()}</span>
-                      </Badge>
+                    </Badge>
                       
                       {/* Migration Status */}
                       {isSelected && (
@@ -269,7 +269,7 @@ export default function SpeciesSelector({ selectedSpecies, onSpeciesChange, load
                   <span className="hidden sm:inline">{species.name}</span>
                   <span className="sm:hidden">{species.name.split(' ')[0]}</span>
                   <span className="ml-1 text-gray-400 group-hover:text-red-400 transition-colors">×</span>
-                </Badge>
+              </Badge>
               </motion.div>
             ))}
           </div>

@@ -164,13 +164,13 @@ export default function DataStats({ stats, loading }: DataStatsProps) {
           {/* Enhanced Progress Bar */}
           <div className="relative">
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div
+            <div
                 className={`h-2 rounded-full transition-all duration-500 ease-out ${
                   stats.dataQuality >= 90 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
                   stats.dataQuality >= 70 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
                   'bg-gradient-to-r from-red-500 to-pink-500'
                 }`}
-                style={{ width: `${stats.dataQuality}%` }}
+              style={{ width: `${stats.dataQuality}%` }}
               >
                 {/* Animated shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>

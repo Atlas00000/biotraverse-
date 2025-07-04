@@ -123,18 +123,18 @@ export default function BioTraverse() {
                       size="sm"
                       className="h-8 px-2 md:px-3 text-xs md:text-sm"
                     >
-                      {isPlaying ? (
-                        <>
+                    {isPlaying ? (
+                      <>
                           <Pause className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Pause</span>
-                        </>
-                      ) : (
-                        <>
+                      </>
+                    ) : (
+                      <>
                           <Play className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Play</span>
-                        </>
-                      )}
-                    </Button>
+                      </>
+                    )}
+                  </Button>
                     <Button 
                       variant="outline" 
                       onClick={handleReset} 
@@ -143,7 +143,7 @@ export default function BioTraverse() {
                       className="h-8 w-8 p-0"
                     >
                       <RotateCcw className="w-3 h-3" />
-                    </Button>
+                  </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -183,12 +183,12 @@ export default function BioTraverse() {
       
       {/* AnalyticsDashboard temporarily disabled for debugging */}
       {/* <AnalyticsDashboard
-        movements={movements}
-        selectedSpecies={selectedSpecies}
-        stats={stats}
-        timeRange={timeRange}
-        isVisible={showAnalytics}
-        onToggle={() => setShowAnalytics(!showAnalytics)}
+          movements={movements}
+          selectedSpecies={selectedSpecies}
+          stats={stats}
+          timeRange={timeRange}
+          isVisible={showAnalytics}
+          onToggle={() => setShowAnalytics(!showAnalytics)}
       /> */}
     </div>
   )
