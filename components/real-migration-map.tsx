@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Circle } from "react-leaflet"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,9 +23,16 @@ import {
 import LoadingGlobe from "@/components/ui/loading-globe"
 import ErrorDisplay from "@/components/ui/error-display"
 import type { AnimalMovement, Species } from "@/types/migration"
-import { processMovementPaths, interpolatePath } from "@/utils/geospatial"
+import { processMovementPaths, interpolatePath, simplifyPath } from "@/utils/geospatial"
 
-// Only import Leaflet CSS and fix markers on client side
+// Dynamic imports for client-side only
+let MapContainer: any = null
+let TileLayer: any = null
+let Marker: any = null
+let Popup: any = null
+let Polyline: any = null
+let useMap: any = null
+let Circle: any = null
 let L: any = null
 let leafletCSSLoaded = false
 
@@ -206,6 +212,7 @@ function MapControls({
 
 // Map Event Handler Component
 function MapEventHandler({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  if (!useMap) return null
   const map = useMap()
 
   useEffect(() => {
@@ -238,9 +245,9 @@ function MigrationPaths({
   isPlaying: boolean
   showPaths: boolean
 }) {
-  const processedPaths = processMovementPaths(movements, timeRange)
+  const processedPaths = processMovementPaths(movements, timeRange, currentTime)
 
-  if (!showPaths) return null
+  if (!showPaths || !Polyline || !Circle || !Popup) return null
 
   return (
     <>
@@ -248,15 +255,18 @@ function MigrationPaths({
         const species = selectedSpecies.find((s) => s.id === path.speciesId)
         if (!species) return null
 
-        // Convert coordinates to Leaflet format [lat, lng]
-        const pathCoordinates = path.coordinates.map(([lng, lat]) => [lat, lng] as [number, number])
+        // Simplify and convert coordinates to Leaflet format [lat, lng]
+        const simplifiedCoordinates = simplifyPath(path.coordinates, 0.1) // Simplify with tolerance
+        const pathCoordinates = simplifiedCoordinates.map(([lng, lat]) => [lat, lng] as [number, number])
         
-        // Calculate current position
-        const currentPosition = interpolatePath(path.coordinates, currentTime / 100)
+        // Calculate current position based on the filtered path
+        const pathProgress = path.coordinates.length > 1 ? 
+          Math.min(currentTime / 100, 1) : 0
+        const currentPosition = interpolatePath(path.coordinates, pathProgress)
         
         return (
           <div key={`${path.speciesId}-${path.animalId}`}>
-            {/* Migration Path Line */}
+                        {/* Migration Path Line */}
             <Polyline
               positions={pathCoordinates}
               color={species.color}
@@ -273,6 +283,9 @@ function MigrationPaths({
                   <div className="text-xs text-gray-500 mt-1">
                     Distance: {path.totalDistance.toFixed(0)}km
                   </div>
+                  <div className="text-xs text-gray-500">
+                    Progress: {Math.round(currentTime)}%
+                  </div>
                 </div>
               </Popup>
             </Polyline>
@@ -280,30 +293,27 @@ function MigrationPaths({
             {/* Current Position Marker */}
             {currentPosition && (
               <div>
-                {/* Pulse rings */}
-                {[1, 2, 3].map((i) => (
-                  <Circle
-                    key={`pulse-${i}`}
-                    center={[currentPosition[1], currentPosition[0]]}
-                    radius={5000 * i}
-                    pathOptions={{
-                      color: species.color,
-                      fillColor: species.color,
-                      fillOpacity: 0.1,
-                      weight: 1,
-                    }}
-                    className="pulse-ring"
-                  />
-                ))}
+                {/* Single pulse ring for performance */}
+                <Circle
+                  center={[currentPosition[1], currentPosition[0]]}
+                  radius={8000}
+                  pathOptions={{
+                    color: species.color,
+                    fillColor: species.color,
+                    fillOpacity: 0.05,
+                    weight: 1,
+                  }}
+                  className="pulse-ring"
+                />
                 
                 {/* Current position marker */}
                 <Circle
                   center={[currentPosition[1], currentPosition[0]]}
-                  radius={2000}
+                  radius={3000}
                   pathOptions={{
                     color: species.color,
                     fillColor: species.color,
-                    fillOpacity: 0.8,
+                    fillOpacity: 0.9,
                     weight: 2,
                   }}
                   className="custom-marker"
@@ -355,8 +365,20 @@ export default function RealMigrationMap({
           leafletCSSLoaded = true
         }
 
-        // Import Leaflet
-        L = await import("leaflet")
+        // Import Leaflet and React-Leaflet components
+        const [leafletModule, reactLeafletModule] = await Promise.all([
+          import("leaflet"),
+          import("react-leaflet")
+        ])
+
+        L = leafletModule
+        MapContainer = reactLeafletModule.MapContainer
+        TileLayer = reactLeafletModule.TileLayer
+        Marker = reactLeafletModule.Marker
+        Popup = reactLeafletModule.Popup
+        Polyline = reactLeafletModule.Polyline
+        useMap = reactLeafletModule.useMap
+        Circle = reactLeafletModule.Circle
         
         // Fix for default markers in React-Leaflet
         delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -376,8 +398,8 @@ export default function RealMigrationMap({
     initClient()
   }, [])
 
-  // Don't render anything until client-side
-  if (!isClient) {
+  // Don't render anything until client-side and components are loaded
+  if (!isClient || !MapContainer || !TileLayer || !Polyline || !Circle) {
     return <LoadingGlobe message="Initializing map..." />
   }
 

@@ -52,8 +52,21 @@ export default function TimelineControls({
 
   return (
     <div className="space-y-2 md:space-y-3">
-      {/* Current Time Display */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-1.5 md:p-2 border border-blue-200/50">
+                {/* Current Time Display */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-1.5 md:p-2 border border-blue-200/50">
+            {/* Progress Bar */}
+            <div className="mb-2">
+              <div className="flex justify-between text-xs text-blue-600 mb-1">
+                <span>Migration Progress</span>
+                <span>{Math.round(currentTime)}%</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-1.5">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${currentTime}%` }}
+                ></div>
+              </div>
+            </div>
         <div className="flex items-center justify-between mb-1 md:mb-1.5">
           <div className="flex items-center gap-1 md:gap-1.5">
             <Clock className="w-3 h-3 text-blue-600" />

@@ -50,8 +50,8 @@ export function generateMockMovements(species: Species, count: number): AnimalMo
   const route = MIGRATION_ROUTES[species.id as keyof typeof MIGRATION_ROUTES] || MIGRATION_ROUTES["arctic-tern"]
   const movements: AnimalMovement[] = []
 
-  // Generate multiple animals for this species
-  const animalCount = Math.ceil(count / 10)
+  // Generate fewer animals for better performance
+  const animalCount = Math.min(Math.ceil(count / 15), 3) // Max 3 animals per species
 
   for (let animalIndex = 0; animalIndex < animalCount; animalIndex++) {
     const animalId = `${species.id}-${animalIndex + 1}`

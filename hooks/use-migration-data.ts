@@ -26,8 +26,8 @@ export function useMigrationData(selectedSpecies: Species[]) {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Generate mock data for selected species
-      const mockMovements = selectedSpecies.flatMap((species) => generateMockMovements(species, 50))
+      // Generate mock data for selected species (reduced for performance)
+      const mockMovements = selectedSpecies.flatMap((species) => generateMockMovements(species, 20))
 
       setMovements(mockMovements)
 

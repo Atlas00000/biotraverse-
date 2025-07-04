@@ -3,6 +3,7 @@ import type { AnimalMovement, MigrationPath } from "@/types/migration"
 export function processMovementPaths(
   movements: AnimalMovement[],
   timeRange: { start: number; end: number },
+  currentTime: number = 0,
 ): MigrationPath[] {
   // Group movements by species and animal
   const groupedMovements = movements.reduce(
@@ -26,17 +27,21 @@ export function processMovementPaths(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     )
 
-    // Filter by time range
+    // Calculate time range within the current time window
     const totalDuration =
       new Date(sortedMovements[sortedMovements.length - 1].timestamp).getTime() -
       new Date(sortedMovements[0].timestamp).getTime()
 
-    const startTime = new Date(sortedMovements[0].timestamp).getTime() + (totalDuration * timeRange.start) / 100
-    const endTime = new Date(sortedMovements[0].timestamp).getTime() + (totalDuration * timeRange.end) / 100
+    const rangeStartTime = new Date(sortedMovements[0].timestamp).getTime() + (totalDuration * timeRange.start) / 100
+    const rangeEndTime = new Date(sortedMovements[0].timestamp).getTime() + (totalDuration * timeRange.end) / 100
+    
+    // Calculate current time position within the range
+    const currentTimeInRange = rangeStartTime + (rangeEndTime - rangeStartTime) * (currentTime / 100)
 
+    // Filter movements up to the current time position
     const filteredMovements = sortedMovements.filter((movement) => {
       const movementTime = new Date(movement.timestamp).getTime()
-      return movementTime >= startTime && movementTime <= endTime
+      return movementTime >= rangeStartTime && movementTime <= currentTimeInRange
     })
 
     // Extract coordinates and calculate total distance

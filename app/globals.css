@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth animations for migration paths */
+.migration-path {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.custom-marker {
+  transition: all 0.2s ease-in-out;
+}
+
+.pulse-ring {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.1;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0.1;
+    transform: scale(0.8);
+  }
+}
+
 /* Cesium Globe Styles */
 @import url('/cesium/Widgets/widgets.css');
 

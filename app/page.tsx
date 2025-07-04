@@ -30,6 +30,20 @@ export default function BioTraverse() {
     }
   }, [selectedSpecies, fetchMovements])
 
+  // Animation loop for playback
+  useEffect(() => {
+    if (!isPlaying || selectedSpecies.length === 0) return
+
+    const interval = setInterval(() => {
+      setCurrentTime((prevTime) => {
+        const newTime = prevTime + 0.5 // Smaller increment for smoother animation
+        return newTime >= timeRange.end ? timeRange.start : newTime
+      })
+    }, 100) // Faster updates for smoother animation
+
+    return () => clearInterval(interval)
+  }, [isPlaying, selectedSpecies.length, timeRange.start, timeRange.end])
+
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying)
   }
