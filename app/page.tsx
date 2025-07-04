@@ -12,6 +12,7 @@ import type { Species } from "@/types/migration"
 import { useMigrationData } from "@/hooks/use-migration-data"
 import VisualizationToggle from "@/components/visualization-toggle"
 import EnhancedControls from "@/components/enhanced-controls"
+import ErrorBoundary from "@/components/ui/error-boundary"
 
 export default function BioTraverse() {
   const [selectedSpecies, setSelectedSpecies] = useState<Species[]>([])
@@ -66,7 +67,8 @@ export default function BioTraverse() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 relative overflow-hidden animate-fade-in">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 relative overflow-hidden animate-fade-in">
       {/* Background elements */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 bg-blue-200 rounded-full blur-3xl animate-pulse"></div>
@@ -434,6 +436,6 @@ export default function BioTraverse() {
           </div>
         )}
       </div>
-    </div>
+    </ErrorBoundary>
   )
 }

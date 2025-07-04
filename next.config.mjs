@@ -14,7 +14,7 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: false,
   
-  // Fix file watching in WSL and handle Cesium
+  // Fix file watching in WSL
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       // Use polling for file watching in WSL
@@ -25,7 +25,7 @@ const nextConfig = {
       }
     }
 
-    // Handle Cesium web workers
+    // Handle web workers and fallbacks
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -33,36 +33,12 @@ const nextConfig = {
       tls: false,
     }
 
-    // Copy Cesium web workers
-    config.module.rules.push({
-      test: /\.worker\.js$/,
-      type: 'asset/resource',
-    })
-
     return config
   },
   // Enable experimental features for better WSL support
   experimental: {
     // Improve file watching
     webpackBuildWorker: false,
-  },
-  // Handle Cesium static assets
-  async headers() {
-    return [
-      {
-        source: '/cesium/:path*',
-        headers: [
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'unsafe-none',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'unsafe-none',
-          },
-        ],
-      },
-    ]
   },
 }
 

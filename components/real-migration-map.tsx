@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
@@ -20,8 +19,7 @@ import {
   Eye,
   EyeOff
 } from "lucide-react"
-import LoadingGlobe from "@/components/ui/loading-globe"
-import ErrorDisplay from "@/components/ui/error-display"
+import LoadingSpinner from "@/components/ui/loading-spinner"
 import type { AnimalMovement, Species } from "@/types/migration"
 import { processMovementPaths, interpolatePath, simplifyPath, calculateSpeciesBoundingBox } from "@/utils/geospatial"
 
@@ -177,14 +175,10 @@ function MapControls({
           <Layers className="w-4 h-4" />
         </Button>
         
-        <AnimatePresence>
-          {showMapMenu && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-full right-0 mt-2 bg-black/80 backdrop-blur-md rounded-lg p-2 space-y-1 shadow-xl border border-white/20"
-            >
+        {showMapMenu && (
+          <div
+            className="absolute top-full right-0 mt-2 bg-black/80 backdrop-blur-md rounded-lg p-2 space-y-1 shadow-xl border border-white/20 animate-in slide-in-from-top-2 duration-200"
+          >
               {Object.entries(MAP_PROVIDERS).map(([key, provider]) => {
                 const IconComponent = provider.icon
                 return (
@@ -205,9 +199,8 @@ function MapControls({
                   </Button>
                 )
               })}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </div>
 
       {/* Toggle Controls */}
@@ -721,23 +714,36 @@ export default function RealMigrationMap({
   }
 
   if (loading) {
-    return <LoadingGlobe message="Loading map..." />
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg">
+        <LoadingSpinner size="lg" text="Loading map..." />
+      </div>
+    )
   }
 
   if (error) {
-    return <ErrorDisplay error={error} onRetry={onRetry} />
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100 rounded-lg">
+        <div className="text-center">
+          <div className="text-red-600 mb-2">⚠️ Error loading map</div>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
+          {onRetry && (
+            <Button onClick={onRetry} variant="outline" size="sm">
+              Try Again
+            </Button>
+          )}
+        </div>
+      </div>
+    )
   }
 
   const selectedProvider = MAP_PROVIDERS[mapType as keyof typeof MAP_PROVIDERS]
 
   return (
-    <motion.div
-      className={`relative h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden ${
+    <div
+      className={`relative h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden animate-in zoom-in duration-500 ${
         isAutoCentering ? 'ring-4 ring-blue-400/50 ring-offset-2' : ''
       }`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
     >
       {/* Map Container */}
       <MapContainer
@@ -836,14 +842,10 @@ export default function RealMigrationMap({
       />
 
       {/* Legend */}
-      <AnimatePresence>
-        {showLegend && selectedSpecies.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="absolute bottom-4 left-4 z-[1000] bg-black/80 backdrop-blur-md rounded-lg p-4 shadow-xl border border-white/20"
-          >
+      {showLegend && selectedSpecies.length > 0 && (
+        <div
+          className="absolute bottom-4 left-4 z-[1000] bg-black/80 backdrop-blur-md rounded-lg p-4 shadow-xl border border-white/20 animate-in slide-in-from-left-2 duration-300"
+        >
             <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               Species Legend
@@ -859,28 +861,19 @@ export default function RealMigrationMap({
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* Species selected notification */}
-      <AnimatePresence>
-        {showSpeciesSelectedNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[2000] pointer-events-none"
-          >
+      {showSpeciesSelectedNotification && (
+        <div
+          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[2000] pointer-events-none animate-in slide-in-from-top-2 duration-500"
+        >
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl border border-white/20 backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
+                <div className="animate-pulse">
                   🎯
-                </motion.div>
+                </div>
                 <div>
                   <p className="font-semibold text-sm">
                     Species Selected! 
@@ -891,29 +884,19 @@ export default function RealMigrationMap({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* Auto-centering overlay notification */}
-      <AnimatePresence>
-        {isAutoCentering && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.4 }}
-            className="absolute inset-0 z-[2000] flex items-center justify-center pointer-events-none"
-          >
+      {isAutoCentering && (
+        <div
+          className="absolute inset-0 z-[2000] flex items-center justify-center pointer-events-none animate-in zoom-in duration-400"
+        >
             <div className="bg-black/80 backdrop-blur-md rounded-xl p-6 shadow-2xl border border-white/20 max-w-sm mx-4">
               <div className="text-center space-y-3">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center"
-                >
+                <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-spin">
                   <Navigation className="w-6 h-6 text-white" />
-                </motion.div>
+                </div>
                 <div>
                   <h3 className="text-white font-semibold text-lg mb-1">Auto-Centering Map</h3>
                   <p className="text-white/80 text-sm">
@@ -922,51 +905,34 @@ export default function RealMigrationMap({
                 </div>
                 <div className="flex justify-center">
                   <div className="w-16 h-1 bg-white/30 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2, ease: "easeInOut" }}
-                    />
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 animate-pulse" />
                   </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* Status Indicators */}
       <div className="absolute bottom-4 right-4 z-[1000] space-y-2">
         {/* Auto-centering indicator */}
-        <AnimatePresence>
-          {isAutoCentering && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-              className="relative"
-            >
+        {isAutoCentering && (
+          <div className="relative animate-in slide-in-from-bottom-2 duration-300">
               <Badge
                 variant="secondary"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-400/50 backdrop-blur-md shadow-lg animate-pulse"
               >
                 <div className="flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
+                  <div className="animate-spin">
                     <Navigation className="w-3 h-3" />
-                  </motion.div>
+                  </div>
                   <span className="text-xs font-medium">Auto-centering to species...</span>
                 </div>
               </Badge>
               {/* Glowing effect */}
-              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-sm animate-ping"></div>
-            </motion.div>
+              <div className="absolute inset-0 bg-blue-400/30 rounded-full blur-sm animate-ping">              </div>
+            </div>
           )}
-        </AnimatePresence>
 
         {/* Playback status */}
         <Badge
@@ -1038,6 +1004,6 @@ export default function RealMigrationMap({
         <p>🖱️ Drag to pan • 🔍 Scroll to zoom • 📱 Pinch to zoom</p>
         <p className="text-white/50 mt-1">Real-time Migration Tracking</p>
       </div>
-    </motion.div>
+    </div>
   )
 } 
