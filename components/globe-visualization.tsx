@@ -8,6 +8,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Globe, Maximize2, Minimize2 } from "lucide-react"
+import LoadingGlobe from "@/components/ui/loading-globe"
 import type { AnimalMovement, Species } from "@/types/migration"
 import { processMovementPaths, interpolatePath } from "@/utils/geospatial"
 
@@ -268,14 +269,7 @@ export default function GlobeVisualization(props: GlobeVisualizationProps) {
   }, [])
 
   if (props.loading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-black rounded-lg">
-        <div className="text-center text-white">
-          <Globe className="h-12 w-12 mx-auto mb-4 animate-spin" />
-          <p>Loading 3D Globe...</p>
-        </div>
-      </div>
-    )
+    return <LoadingGlobe message="Loading 3D Globe..." />
   }
 
   return (
