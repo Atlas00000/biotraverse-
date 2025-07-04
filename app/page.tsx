@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Play, Pause, RotateCcw, Zap, Globe, Clock } from "lucide-react"
+import { Play, Pause, RotateCcw, Zap, Globe, Clock, MapPin, TrendingUp, Activity, Database } from "lucide-react"
 import TimelineControls from "@/components/timeline-controls"
 import SpeciesSelector from "@/components/species-selector"
 import DataStats from "@/components/data-stats"
 import type { Species } from "@/types/migration"
 import { useMigrationData } from "@/hooks/use-migration-data"
 import VisualizationToggle from "@/components/visualization-toggle"
+import EnhancedControls from "@/components/enhanced-controls"
 // import AnalyticsDashboard from "@/components/analytics-dashboard"
 
 export default function BioTraverse() {
@@ -103,6 +104,25 @@ export default function BioTraverse() {
 
             {/* Data Stats */}
             <DataStats stats={stats} loading={loading} />
+
+            {/* Enhanced Controls */}
+            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm md:text-base">Enhanced Controls</CardTitle>
+                <CardDescription className="text-xs">Advanced visualization settings</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <EnhancedControls
+                  isPlaying={isPlaying}
+                  currentTime={currentTime}
+                  onPlayPause={handlePlayPause}
+                  onReset={handleReset}
+                  onTimeChange={setCurrentTime}
+                  disabled={selectedSpecies.length === 0}
+                  selectedSpeciesCount={selectedSpecies.length}
+                />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Main Visualization Area */}
@@ -179,6 +199,218 @@ export default function BioTraverse() {
             </Card>
           </div>
         </div>
+
+        {/* Quick Actions Section */}
+        <div className="mt-6 md:mt-8">
+          <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm md:text-base">Quick Actions</CardTitle>
+              <CardDescription className="text-xs">Common tasks and shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-auto p-3 flex flex-col items-center gap-2 text-xs"
+                  onClick={handleReset}
+                  disabled={selectedSpecies.length === 0}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reset View</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-auto p-3 flex flex-col items-center gap-2 text-xs"
+                  onClick={() => setZoomLevel(2)}
+                  disabled={selectedSpecies.length === 0}
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>World View</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-auto p-3 flex flex-col items-center gap-2 text-xs"
+                  onClick={() => setZoomLevel(5)}
+                  disabled={selectedSpecies.length === 0}
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Zoom In</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-auto p-3 flex flex-col items-center gap-2 text-xs"
+                  onClick={() => setCurrentTime(50)}
+                  disabled={selectedSpecies.length === 0}
+                >
+                  <Clock className="w-4 h-4" />
+                  <span>Mid Year</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Status and Information Section */}
+        <div className="mt-6 md:mt-8">
+          <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm md:text-base">System Status</CardTitle>
+              <CardDescription className="text-xs">Current application state and information</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Data Status */}
+                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg border border-blue-200/50">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : error ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                    <div>
+                      <div className="text-xs font-medium text-blue-900">Data Status</div>
+                      <div className="text-xs text-blue-600">
+                        {loading ? 'Loading...' : error ? 'Error' : 'Ready'}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                    {movements.length} points
+                  </Badge>
+                </div>
+
+                {/* Playback Status */}
+                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100/50 rounded-lg border border-green-200/50">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                    <div>
+                      <div className="text-xs font-medium text-green-900">Playback</div>
+                      <div className="text-xs text-green-600">
+                        {isPlaying ? 'Playing' : 'Paused'}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    {Math.round(currentTime)}%
+                  </Badge>
+                </div>
+
+                {/* Connection Status */}
+                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-lg border border-purple-200/50">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${isStreaming ? 'bg-purple-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                    <div>
+                      <div className="text-xs font-medium text-purple-900">Connection</div>
+                      <div className="text-xs text-purple-600">
+                        {isStreaming ? 'Live Data' : 'Cached'}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                    {isStreaming ? 'Live' : 'Offline'}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Migration Insights Section */}
+        {selectedSpecies.length > 0 && (
+          <div className="mt-6 md:mt-8">
+            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm md:text-base">Migration Insights</CardTitle>
+                <CardDescription className="text-xs">Key patterns and statistics from selected species</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  {/* Total Distance */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 border border-blue-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded-md flex items-center justify-center">
+                        <MapPin className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-blue-900">Distance</span>
+                    </div>
+                    <div className="text-lg font-bold text-blue-900">
+                      {stats?.totalDistance ? `${stats.totalDistance.toFixed(0)}km` : '0km'}
+                    </div>
+                  </div>
+
+                  {/* Average Speed */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-lg p-3 border border-green-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center">
+                        <TrendingUp className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-green-900">Speed</span>
+                    </div>
+                    <div className="text-lg font-bold text-green-900">
+                      {stats?.averageSpeed ? `${stats.averageSpeed.toFixed(1)} km/h` : '0 km/h'}
+                    </div>
+                  </div>
+
+                  {/* Active Tracks */}
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-lg p-3 border border-purple-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-purple-500 rounded-md flex items-center justify-center">
+                        <Activity className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-purple-900">Tracks</span>
+                    </div>
+                    <div className="text-lg font-bold text-purple-900">
+                      {stats?.activeTracks || 0}
+                    </div>
+                  </div>
+
+                  {/* Data Quality */}
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-lg p-3 border border-orange-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center">
+                        <Database className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-orange-900">Quality</span>
+                    </div>
+                    <div className="text-lg font-bold text-orange-900">
+                      {stats?.dataQuality ? `${stats.dataQuality}%` : '0%'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Species Summary */}
+                <div className="mt-4 pt-4 border-t border-gray-200/50">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-gray-700">Selected Species</span>
+                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                      {selectedSpecies.length} Active
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSpecies.map((species) => (
+                      <Badge
+                        key={species.id}
+                        variant="secondary"
+                        className="text-xs"
+                        style={{ 
+                          backgroundColor: `${species.color}15`, 
+                          color: species.color,
+                          borderColor: species.color
+                        }}
+                      >
+                        <span className="mr-1">{species.icon}</span>
+                        {species.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
       
       {/* AnalyticsDashboard temporarily disabled for debugging */}
