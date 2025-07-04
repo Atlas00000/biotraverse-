@@ -1,4 +1,4 @@
-import type { AnimalMovement, MigrationPath } from "@/types/migration"
+import type { AnimalMovement, MigrationPath, Species } from "@/types/migration"
 
 export function processMovementPaths(
   movements: AnimalMovement[],
@@ -156,4 +156,105 @@ function perpendicularDistance(
   const denominator = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
 
   return numerator / denominator
+}
+
+// Calculate bounding box for a set of coordinates
+export function calculateBoundingBox(coordinates: [number, number][]): {
+  north: number
+  south: number
+  east: number
+  west: number
+} | null {
+  if (coordinates.length === 0) return null
+
+  let north = coordinates[0][1]
+  let south = coordinates[0][1]
+  let east = coordinates[0][0]
+  let west = coordinates[0][0]
+
+  for (const [lon, lat] of coordinates) {
+    north = Math.max(north, lat)
+    south = Math.min(south, lat)
+    east = Math.max(east, lon)
+    west = Math.min(west, lon)
+  }
+
+  return { north, south, east, west }
+}
+
+// Calculate optimal center and zoom for multiple bounding boxes
+export function calculateOptimalView(boundingBoxes: Array<{
+  north: number
+  south: number
+  east: number
+  west: number
+}>): { center: [number, number]; zoom: number } {
+  if (boundingBoxes.length === 0) {
+    return { center: [20, 0], zoom: 2 } // Default world view
+  }
+
+  // Find the combined bounding box
+  let combinedNorth = boundingBoxes[0].north
+  let combinedSouth = boundingBoxes[0].south
+  let combinedEast = boundingBoxes[0].east
+  let combinedWest = boundingBoxes[0].west
+
+  for (const bbox of boundingBoxes) {
+    combinedNorth = Math.max(combinedNorth, bbox.north)
+    combinedSouth = Math.min(combinedSouth, bbox.south)
+    combinedEast = Math.max(combinedEast, bbox.east)
+    combinedWest = Math.min(combinedWest, bbox.west)
+  }
+
+  // Calculate center
+  const centerLat = (combinedNorth + combinedSouth) / 2
+  const centerLng = (combinedEast + combinedWest) / 2
+
+  // Calculate optimal zoom level
+  const latDiff = combinedNorth - combinedSouth
+  const lngDiff = combinedEast - combinedWest
+  const maxDiff = Math.max(latDiff, lngDiff)
+
+  // Zoom level calculation based on the maximum difference
+  let zoom = 2 // Default zoom
+  if (maxDiff > 0) {
+    // Logarithmic zoom calculation
+    zoom = Math.floor(14 - Math.log2(maxDiff * 2))
+    zoom = Math.max(1, Math.min(18, zoom)) // Clamp between 1 and 18
+  }
+
+  // Add some padding by reducing zoom slightly
+  zoom = Math.max(1, zoom - 1)
+
+  return { center: [centerLat, centerLng], zoom }
+}
+
+// Calculate bounding box for selected species movements
+export function calculateSpeciesBoundingBox(
+  movements: AnimalMovement[],
+  selectedSpecies: Species[]
+): { center: [number, number]; zoom: number } {
+  if (selectedSpecies.length === 0 || movements.length === 0) {
+    return { center: [20, 0], zoom: 2 }
+  }
+
+  // Filter movements for selected species
+  const selectedSpeciesIds = selectedSpecies.map(s => s.id)
+  const filteredMovements = movements.filter(m => selectedSpeciesIds.includes(m.speciesId))
+
+  if (filteredMovements.length === 0) {
+    return { center: [20, 0], zoom: 2 }
+  }
+
+  // Extract all coordinates
+  const allCoordinates: [number, number][] = filteredMovements.map(m => [m.longitude, m.latitude])
+
+  // Calculate bounding box
+  const bbox = calculateBoundingBox(allCoordinates)
+  if (!bbox) {
+    return { center: [20, 0], zoom: 2 }
+  }
+
+  // Calculate optimal view
+  return calculateOptimalView([bbox])
 }

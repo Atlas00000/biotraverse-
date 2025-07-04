@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2 } from "lucide-react"
+import { Loader2, Info } from "lucide-react"
 import type { Species } from "@/types/migration"
 
 const AVAILABLE_SPECIES: Species[] = [
@@ -93,6 +93,84 @@ export default function SpeciesSelector({ selectedSpecies, onSpeciesChange, load
 
   return (
     <div className="space-y-3">
+      {/* Auto-centering info */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden"
+      >
+        <div className={`flex items-center gap-3 p-3 border-2 rounded-lg shadow-sm ${
+          selectedSpecies.length === 1 
+            ? 'bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-300/50' 
+            : selectedSpecies.length > 1
+            ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-300/50'
+            : 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-300/50'
+        }`}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Info className={`w-5 h-5 flex-shrink-0 ${
+              selectedSpecies.length === 1 ? 'text-green-600' : 
+              selectedSpecies.length > 1 ? 'text-amber-600' : 'text-blue-600'
+            }`} />
+          </motion.div>
+          <div>
+            <p className={`text-sm font-semibold mb-1 ${
+              selectedSpecies.length === 1 ? 'text-green-800' : 
+              selectedSpecies.length > 1 ? 'text-amber-800' : 'text-blue-800'
+            }`}>
+              {selectedSpecies.length === 1 ? '🎯 Auto-Centering Active' : 
+               selectedSpecies.length > 1 ? '⚠️ Multiple Species Selected' : 
+               '🎯 Auto-Centering Available'}
+            </p>
+            <p className={`text-xs ${
+              selectedSpecies.length === 1 ? 'text-green-700' : 
+              selectedSpecies.length > 1 ? 'text-amber-700' : 'text-blue-700'
+            }`}>
+              {selectedSpecies.length === 1 
+                ? 'The map will automatically center on your selected species!' 
+                : selectedSpecies.length > 1
+                ? 'Select a single species to enable auto-centering feature'
+                : 'Select a single species to enable auto-centering'
+              }
+            </p>
+          </div>
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className={`w-2 h-2 rounded-full ${
+              selectedSpecies.length === 1 ? 'bg-green-500' : 
+              selectedSpecies.length > 1 ? 'bg-amber-500' : 'bg-blue-500'
+            }`}
+          />
+        </div>
+        {/* Animated border */}
+        <motion.div
+          className={`absolute inset-0 border-2 rounded-lg ${
+            selectedSpecies.length === 1 ? 'border-green-400/30' : 
+            selectedSpecies.length > 1 ? 'border-amber-400/30' : 'border-blue-400/30'
+          }`}
+          animate={{ 
+            boxShadow: selectedSpecies.length === 1 ? [
+              "0 0 0 0 rgba(34, 197, 94, 0.4)",
+              "0 0 0 4px rgba(34, 197, 94, 0)",
+              "0 0 0 0 rgba(34, 197, 94, 0)"
+            ] : selectedSpecies.length > 1 ? [
+              "0 0 0 0 rgba(245, 158, 11, 0.4)",
+              "0 0 0 4px rgba(245, 158, 11, 0)",
+              "0 0 0 0 rgba(245, 158, 11, 0)"
+            ] : [
+              "0 0 0 0 rgba(59, 130, 246, 0.4)",
+              "0 0 0 4px rgba(59, 130, 246, 0)",
+              "0 0 0 0 rgba(59, 130, 246, 0)"
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+      </motion.div>
+
       {/* Enhanced Header with Search */}
       <div className="space-y-2">
         <div className="flex gap-1">

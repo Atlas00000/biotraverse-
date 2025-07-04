@@ -1,4 +1,4 @@
-# Development Commandments
+ # Development Commandments
 
 ## Core Principles
 

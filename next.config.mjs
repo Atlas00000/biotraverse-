@@ -9,6 +9,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: false,
+  
   // Fix file watching in WSL and handle Cesium
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

@@ -32,12 +32,20 @@ export default function BioTraverse() {
   useEffect(() => {
     if (!isPlaying || selectedSpecies.length === 0) return
 
+    // Performance optimization: Adjust animation speed based on species count
+    const getAnimationSpeed = (speciesCount: number) => {
+      if (speciesCount <= 2) return 100 // Fast for few species
+      if (speciesCount <= 4) return 150 // Medium for 3-4 species
+      if (speciesCount <= 6) return 200 // Slower for 5-6 species
+      return 300 // Slowest for 7+ species
+    }
+
     const interval = setInterval(() => {
       setCurrentTime((prevTime) => {
         const newTime = prevTime + 0.5
         return newTime >= timeRange.end ? timeRange.start : newTime
       })
-    }, 100)
+    }, getAnimationSpeed(selectedSpecies.length))
 
     return () => clearInterval(interval)
   }, [isPlaying, selectedSpecies.length, timeRange.start, timeRange.end])
@@ -90,6 +98,12 @@ export default function BioTraverse() {
                 <Clock className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="hidden sm:inline">{selectedSpecies.length} Species</span>
               </Badge>
+              {selectedSpecies.length > 3 && (
+                <Badge variant="outline" className="gap-1 md:gap-2 bg-amber-100 text-amber-800 border-amber-300 text-xs">
+                  <Activity className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Performance Mode</span>
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -105,15 +119,15 @@ export default function BioTraverse() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm md:text-base">Species Selection</CardTitle>
                   <CardDescription className="text-xs">Choose wildlife species to track</CardDescription>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="pt-0">
-                  <SpeciesSelector
-                    selectedSpecies={selectedSpecies}
-                    onSpeciesChange={handleSpeciesChange}
-                    loading={loading}
-                  />
-                </CardContent>
-              </Card>
+                <SpeciesSelector
+                  selectedSpecies={selectedSpecies}
+                  onSpeciesChange={handleSpeciesChange}
+                  loading={loading}
+                />
+              </CardContent>
+            </Card>
             </div>
 
             {/* Data Stats */}
@@ -127,7 +141,7 @@ export default function BioTraverse() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm md:text-base">Enhanced Controls</CardTitle>
                   <CardDescription className="text-xs">Advanced visualization settings</CardDescription>
-                </CardHeader>
+              </CardHeader>
                 <CardContent className="pt-0">
                   <EnhancedControls
                     isPlaying={isPlaying}
@@ -160,18 +174,18 @@ export default function BioTraverse() {
                       size="sm"
                       className="h-8 px-2 md:px-3 text-xs md:text-sm button-smooth"
                     >
-                      {isPlaying ? (
-                        <>
+                    {isPlaying ? (
+                      <>
                           <Pause className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Pause</span>
-                        </>
-                      ) : (
-                        <>
+                      </>
+                    ) : (
+                      <>
                           <Play className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Play</span>
-                        </>
-                      )}
-                    </Button>
+                      </>
+                    )}
+                  </Button>
                     <Button 
                       variant="outline" 
                       onClick={handleReset} 
@@ -180,7 +194,7 @@ export default function BioTraverse() {
                       className="h-8 w-8 p-0 button-smooth"
                     >
                       <RotateCcw className="w-3 h-3" />
-                    </Button>
+                  </Button>
                   </div>
                 </div>
               </CardHeader>

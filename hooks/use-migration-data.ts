@@ -26,8 +26,16 @@ export function useMigrationData(selectedSpecies: Species[]) {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Generate mock data for selected species (reduced for performance)
-      const mockMovements = selectedSpecies.flatMap((species) => generateMockMovements(species, 20))
+      // Performance optimization: Reduce data points for multiple species
+      const getMovementCount = (speciesCount: number) => {
+        if (speciesCount <= 2) return 20 // Full detail for 1-2 species
+        if (speciesCount <= 4) return 15 // Medium detail for 3-4 species
+        if (speciesCount <= 6) return 10 // Lower detail for 5-6 species
+        return 8 // Minimal detail for 7+ species
+      }
+      
+      const movementCount = getMovementCount(selectedSpecies.length)
+      const mockMovements = selectedSpecies.flatMap((species) => generateMockMovements(species, movementCount))
 
       setMovements(mockMovements)
 
