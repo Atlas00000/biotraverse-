@@ -12,7 +12,6 @@ import type { Species } from "@/types/migration"
 import { useMigrationData } from "@/hooks/use-migration-data"
 import VisualizationToggle from "@/components/visualization-toggle"
 import EnhancedControls from "@/components/enhanced-controls"
-// import AnalyticsDashboard from "@/components/analytics-dashboard"
 
 export default function BioTraverse() {
   const [selectedSpecies, setSelectedSpecies] = useState<Species[]>([])
@@ -30,16 +29,15 @@ export default function BioTraverse() {
     }
   }, [selectedSpecies, fetchMovements])
 
-  // Animation loop for playback
   useEffect(() => {
     if (!isPlaying || selectedSpecies.length === 0) return
 
     const interval = setInterval(() => {
       setCurrentTime((prevTime) => {
-        const newTime = prevTime + 0.5 // Smaller increment for smoother animation
+        const newTime = prevTime + 0.5
         return newTime >= timeRange.end ? timeRange.start : newTime
       })
-    }, 100) // Faster updates for smoother animation
+    }, 100)
 
     return () => clearInterval(interval)
   }, [isPlaying, selectedSpecies.length, timeRange.start, timeRange.end])
@@ -60,12 +58,13 @@ export default function BioTraverse() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 relative overflow-hidden">
-      {/* Subtle animated background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 relative overflow-hidden animate-fade-in">
+      {/* Background elements */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 bg-blue-200 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-40 h-40 bg-green-200 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
+      
       {/* Header */}
       <header className="border-b border-slate-200/50 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-2 md:py-3">
@@ -97,50 +96,55 @@ export default function BioTraverse() {
       </header>
 
       <div className="container mx-auto px-4 py-4 md:py-6">
-        {/* Mobile Layout - Stacked Controls */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 md:gap-4">
-          {/* Left Controls Panel - Full width on mobile, sidebar on desktop */}
-          <div className="xl:col-span-1 space-y-3 order-1 xl:order-1">
+          {/* Left Controls Panel */}
+          <div className="xl:col-span-1 space-y-3 order-1 xl:order-1 animate-slide-in-left">
             {/* Species Selection */}
-            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm md:text-base">Species Selection</CardTitle>
-                <CardDescription className="text-xs">Choose wildlife species to track</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <SpeciesSelector
-                  selectedSpecies={selectedSpecies}
-                  onSpeciesChange={handleSpeciesChange}
-                  loading={loading}
-                />
-              </CardContent>
-            </Card>
+            <div className="animate-slide-in-up delay-200">
+              <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300 card-hover">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm md:text-base">Species Selection</CardTitle>
+                  <CardDescription className="text-xs">Choose wildlife species to track</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <SpeciesSelector
+                    selectedSpecies={selectedSpecies}
+                    onSpeciesChange={handleSpeciesChange}
+                    loading={loading}
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Data Stats */}
-            <DataStats stats={stats} loading={loading} />
+            <div className="animate-slide-in-up delay-300">
+              <DataStats stats={stats} loading={loading} />
+            </div>
 
             {/* Enhanced Controls */}
-            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm md:text-base">Enhanced Controls</CardTitle>
-                <CardDescription className="text-xs">Advanced visualization settings</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <EnhancedControls
-                  isPlaying={isPlaying}
-                  currentTime={currentTime}
-                  onPlayPause={handlePlayPause}
-                  onReset={handleReset}
-                  onTimeChange={setCurrentTime}
-                  disabled={selectedSpecies.length === 0}
-                  selectedSpeciesCount={selectedSpecies.length}
-                />
-              </CardContent>
-            </Card>
+            <div className="animate-slide-in-up delay-400">
+              <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300 card-hover">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm md:text-base">Enhanced Controls</CardTitle>
+                  <CardDescription className="text-xs">Advanced visualization settings</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <EnhancedControls
+                    isPlaying={isPlaying}
+                    currentTime={currentTime}
+                    onPlayPause={handlePlayPause}
+                    onReset={handleReset}
+                    onTimeChange={setCurrentTime}
+                    disabled={selectedSpecies.length === 0}
+                    selectedSpeciesCount={selectedSpecies.length}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Main Visualization Area */}
-          <div className="xl:col-span-4 order-2 xl:order-2">
+          <div className="xl:col-span-4 order-2 xl:order-2 animate-slide-in-right">
             <Card className="h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-2 md:pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -149,35 +153,34 @@ export default function BioTraverse() {
                     <CardDescription className="text-xs">Real-time animated wildlife migration patterns</CardDescription>
                   </div>
                   
-                  {/* Playback Controls - Responsive layout */}
                   <div className="flex items-center gap-2">
                     <Button 
                       onClick={handlePlayPause} 
                       disabled={selectedSpecies.length === 0} 
                       size="sm"
-                      className="h-8 px-2 md:px-3 text-xs md:text-sm"
+                      className="h-8 px-2 md:px-3 text-xs md:text-sm button-smooth"
                     >
-                    {isPlaying ? (
-                      <>
+                      {isPlaying ? (
+                        <>
                           <Pause className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Pause</span>
-                      </>
-                    ) : (
-                      <>
+                        </>
+                      ) : (
+                        <>
                           <Play className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">Play</span>
-                      </>
-                    )}
-                  </Button>
+                        </>
+                      )}
+                    </Button>
                     <Button 
                       variant="outline" 
                       onClick={handleReset} 
                       disabled={selectedSpecies.length === 0}
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 button-smooth"
                     >
                       <RotateCcw className="w-3 h-3" />
-                  </Button>
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -196,7 +199,6 @@ export default function BioTraverse() {
                   onRetry={fetchMovements}
                 />
                 
-                {/* Timeline Controls - Responsive floating overlay */}
                 <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 right-2 md:right-4 z-10">
                   <div className="bg-white/90 backdrop-blur-md rounded-lg p-2 md:p-3 shadow-lg border border-slate-200/50">
                     <TimelineControls
@@ -215,7 +217,7 @@ export default function BioTraverse() {
         </div>
 
         {/* Quick Actions Section */}
-        <div className="mt-6 md:mt-8">
+        <div className="mt-6 md:mt-8 animate-slide-in-up delay-500">
           <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm md:text-base">Quick Actions</CardTitle>
@@ -271,8 +273,8 @@ export default function BioTraverse() {
           </Card>
         </div>
 
-        {/* Status and Information Section */}
-        <div className="mt-6 md:mt-8">
+        {/* System Status Section */}
+        <div className="mt-6 md:mt-8 animate-slide-in-up delay-600">
           <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm md:text-base">System Status</CardTitle>
@@ -280,7 +282,6 @@ export default function BioTraverse() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Data Status */}
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg border border-blue-200/50">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : error ? 'bg-red-500' : 'bg-green-500'}`}></div>
@@ -296,7 +297,6 @@ export default function BioTraverse() {
                   </Badge>
                 </div>
 
-                {/* Playback Status */}
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100/50 rounded-lg border border-green-200/50">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
@@ -312,7 +312,6 @@ export default function BioTraverse() {
                   </Badge>
                 </div>
 
-                {/* Connection Status */}
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-lg border border-purple-200/50">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${isStreaming ? 'bg-purple-500 animate-pulse' : 'bg-gray-400'}`}></div>
@@ -334,7 +333,7 @@ export default function BioTraverse() {
 
         {/* Migration Insights Section */}
         {selectedSpecies.length > 0 && (
-          <div className="mt-6 md:mt-8">
+          <div className="mt-6 md:mt-8 animate-slide-in-up delay-700">
             <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm md:text-base">Migration Insights</CardTitle>
@@ -342,7 +341,6 @@ export default function BioTraverse() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                  {/* Total Distance */}
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-3 border border-blue-200/50">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 bg-blue-500 rounded-md flex items-center justify-center">
@@ -355,7 +353,6 @@ export default function BioTraverse() {
                     </div>
                   </div>
 
-                  {/* Average Speed */}
                   <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-lg p-3 border border-green-200/50">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center">
@@ -368,7 +365,6 @@ export default function BioTraverse() {
                     </div>
                   </div>
 
-                  {/* Active Tracks */}
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-lg p-3 border border-purple-200/50">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 bg-purple-500 rounded-md flex items-center justify-center">
@@ -381,7 +377,6 @@ export default function BioTraverse() {
                     </div>
                   </div>
 
-                  {/* Data Quality */}
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-lg p-3 border border-orange-200/50">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center">
@@ -395,7 +390,6 @@ export default function BioTraverse() {
                   </div>
                 </div>
 
-                {/* Species Summary */}
                 <div className="mt-4 pt-4 border-t border-gray-200/50">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-medium text-gray-700">Selected Species</span>
@@ -426,16 +420,6 @@ export default function BioTraverse() {
           </div>
         )}
       </div>
-      
-      {/* AnalyticsDashboard temporarily disabled for debugging */}
-      {/* <AnalyticsDashboard
-          movements={movements}
-          selectedSpecies={selectedSpecies}
-          stats={stats}
-          timeRange={timeRange}
-          isVisible={showAnalytics}
-          onToggle={() => setShowAnalytics(!showAnalytics)}
-      /> */}
     </div>
   )
 }
